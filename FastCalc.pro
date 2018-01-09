@@ -8,7 +8,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = Laskin
+TARGET = FastCalc
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
@@ -25,15 +25,23 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    exparser.cpp \
+    memory.cpp \
+    memorylabel.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    exparser.h \
+    memory.h \
+    memorylabel.h
 
 FORMS += \
         mainwindow.ui
 
 DISTFILES += \
-    vielayksitesti.rc
+    FastCalc.rc
 
-RC_FILE = vielayksitesti.rc
+RC_FILE = FastCalc.rc
+
+CONFIG += static

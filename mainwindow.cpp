@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QtWidgets>
+#include "exparser.h"
+#include "memorylabel.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -9,7 +11,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     MainWindow::setShortcuts();
-    this->setMinimumSize(130, 130);
+    this->setMinimumSize(220, 220);
+
 }
 
 MainWindow::~MainWindow()
@@ -18,18 +21,36 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::setShortcuts(){
-    // Set shortcuts for the buttons in the UI.
-
+    /**
+     * Set shortcuts for the program.
+     */
+    // Make a shortcut-object for both enter keys and connect them to the
+    // "="-button.
     QShortcut *shortcut1 = new QShortcut(QKeySequence(Qt::Key_Enter), this);
     QShortcut *shortcut2 = new QShortcut(QKeySequence(Qt::Key_Return),this);
-    connect(shortcut1, SIGNAL(activated()), this, SLOT(on_calcPushButton_clicked()));
-    connect(shortcut2, SIGNAL(activated()), this, SLOT(on_calcPushButton_clicked()));
+    connect(shortcut1, SIGNAL(activated()), this,
+            SLOT(on_calcPushButton_clicked()));
+    connect(shortcut2, SIGNAL(activated()), this,
+            SLOT(on_calcPushButton_clicked()));
+
+    // Set shortcut for "clear"-button.
     ui->clearButton->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
+
+    // Set key for getting previous calculation from the memory.
+    QShortcut *loadPrecSC = new QShortcut(QKeySequence(Qt::Key_Down), this);
+    connect(loadPrecSC, SIGNAL(activated()), this, SLOT(loadPrev()));
+
+    // Set key for getting the next answer from the memory.
+    QShortcut *loadNextSC = new QShortcut(QKeySequence(Qt::Key_Up), this);
+    connect(loadNextSC, SIGNAL(activated()), this, SLOT(loadNext()));
 }
 
 void MainWindow::on_calcPushButton_clicked()
 {
-    // "="-button or enter was pressed.
+    /**
+     * Try to calculate the input in the calcLineEdit when the "="-button is
+     * clicked.
+     */
 
     // Check that user has written some input.
     if (ui->calcLineEdit->text() != ""){
@@ -39,207 +60,118 @@ void MainWindow::on_calcPushButton_clicked()
 
 void MainWindow::calculate()
 {
-    // Comment.
+    /**
+     * Try to calculate the input with an EXParser-object. Then show the result
+     * on the screen.
+     */
+
+    // Get user input from calcLineEdit.
     QString input = ui->calcLineEdit->text();
 
+    // Remove spaces from the user input.
     input = MainWindow::removeSpaces(input);
 
-    input = MainWindow::findParentheses(input);
+    // Parse and calculate the user input.
+    EXParser mathParser;
+    QString ans = QString::fromStdString(
+                mathParser.evaluate(input.toStdString()));
 
+    // Put the calculation to the memory layout.
+    addToMemoryLayout(input, ans);
 
-    double answer = MainWindow::calcArithmetics(input);
-
-    ui->calcLineEdit->setText(QString::number(answer));
-
-    input = input + QString("=") + QString::number(answer);
-
-    MainWindow::addToMemoryLayout(input);
-
-
-    ui->calcLineEdit->setText(QString::number(answer));
+    // Show the result on the screen.
+    ui->calcLineEdit->setText(ans);
     ui->calcLineEdit->selectAll();
 }
 
-double MainWindow::calcArithmetics(QString input){
-
-    QList<double> numbers = MainWindow::findNumbers(input);
-    QStringList operators = MainWindow::findOperators(input);
-
-    Operation prodDivStruct = MainWindow::calcProdDiv(numbers, operators);
-    numbers = prodDivStruct.numbers;
-    operators = prodDivStruct.operators;
-
-    Operation subSumStruct = MainWindow::calcSumSub(numbers, operators);
-    numbers = subSumStruct.numbers;
-    operators = subSumStruct.operators;
-    return numbers[0];
-}
-
-// 30.12.2017
-
-QString MainWindow::findParentheses(QString input)
+void MainWindow::addToMemoryLayout(QString input, QString ans)
 {
-    QList<int> parenthesesIndexes;
-    for (int i=0; i<input.size(); i++){
-        if (input[i] == "("){
-            parenthesesIndexes.append(i);
-        } else if(input[i] == ")"){
-            QString subString;
-            subString = input.mid(parenthesesIndexes.last() + 1, i-parenthesesIndexes.last()-1);
+    /**
+      * Add the calculation in the memory layout. Also store the answer in the
+      * memory-object.
+      */
 
-            double answer = MainWindow::calcArithmetics(subString);
-            input.replace(parenthesesIndexes.last(), i - parenthesesIndexes.last()+1, QString::number(answer));
-            i = parenthesesIndexes.last();
-            parenthesesIndexes.removeLast();
+    QString calculation = input + QString("=") + ans;
 
-        }
-    }
-    /*if (parenthesesIndexes.size() != 0){
-        QString subString;
-        subString = input.mid(parenthesesIndexes[0] + 1, parenthesesIndexes[1] - parenthesesIndexes[0] - 1);
+    // Store the answer in memory-object.
+    memory.addToMemory(input);
 
-        double answer = MainWindow::calcArithmetics(subString);
-        input.replace(parenthesesIndexes[0], parenthesesIndexes[1] - parenthesesIndexes[0]+1, QString::number(answer));
-        return input;
-    } else{
-        return input;
-    }*/
-    return input;
-}
+    calculation = MainWindow::addSpaces(calculation);
 
-// 30.12.2017
+    // Add a new clickable "MemoryLabel" to the memory layout.
+    MemoryLabel *mLabel = new MemoryLabel();
+    mLabel->setText(calculation);
+    mLabel->setFont(QFont("Arial", 12));
+    connect(mLabel, SIGNAL(clicked(MemoryLabel*)), this,
+            SLOT(on_mLabel_click(MemoryLabel*)));
 
-
-void MainWindow::addToMemoryLayout(QString input)
-{
-    input = MainWindow::addSpaces(input);
-
-    QLabel *mInput = new QLabel(input);
-    mInput->setFont(QFont("Arial", 12));
-
+    // Create a grey line after the label.
     QWidget *horizontalLine = new QWidget();
     horizontalLine -> setFixedHeight(2);
     horizontalLine -> setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     horizontalLine -> setStyleSheet(QString("background-color: #c0c0c0;"));
     ui->memoryLayout->insertWidget(0, horizontalLine);
-    ui->memoryLayout->insertWidget(0, mInput);
+    ui->memoryLayout->insertWidget(0, mLabel);
 
 }
 
+
+
 QString MainWindow::addSpaces(QString input){
-    // Add spaces to the QString input.
+    /**
+     * Add spaces to the QString input. Opposite to removeSpaces(). Add space
+     * before and after every "+", "-", "*", "/" and "="-mark.
+     * @param input: Calculation without spaces.
+     * @return output: Calculation with added spaces.
+     */
     QString space(" ");
-    for (int i = 0; i<input.size(); i++){
-        QString m(input[i]);
+    QString output = input;
+    for (int i = 0; i<output.size(); i++){
+        QString m(output[i]);
         if (m == "+" || m == "-" || m == "*"|| m == "/"|| m == "="){
-            input.insert(i+1, space);
-            input.insert(i, space);
+            output.insert(i+1, space);
+            output.insert(i, space);
             i += 1;
         }
     }
-    return input;
-}
-
-MainWindow::Operation MainWindow::calcProdDiv(QList<double> numbers, QStringList operators){
-    // Calculate products and divisions. Remove used operators from the list and
-    // update the results to numbers-list.
-    for (int i = 0; i<operators.size(); i++){
-
-       if(operators[i] == "*"){
-            double product = numbers[i] * numbers[i+1];
-            numbers[i] = product;
-            numbers.removeAt(i+1);
-            operators.removeAt(i);
-            i -= 1;
-        } else if (operators[i] == "/"){
-            double product = numbers[i] / numbers[i+1];
-            numbers[i] = product;
-            numbers.removeAt(i+1);
-            operators.removeAt(i);
-            i -= 1; }
-    }
-
-    MainWindow::Operation results;
-    results.numbers = numbers;
-    results.operators = operators;
-
-    return results;
-}
-
-MainWindow::Operation MainWindow::calcSumSub(QList<double> numbers, QStringList operators){
-    // Calculate sums and substractions.
-    for (int i = 0; i < operators.size(); i++){
-        if (operators[i] == "+"){
-            double product = numbers[i] + numbers[i+1];
-            numbers[i] = product;
-            numbers.removeAt(i+1);
-            operators.removeAt(i);
-            i -= 1;
-        } else if (operators[i] == "-"){
-            double product = numbers[i] - numbers[i+1];
-            numbers[i] = product;
-            numbers.removeAt(i+1);
-            operators.removeAt(i);
-            i -= 1; }
-    }
-    MainWindow::Operation results;
-    results.numbers = numbers;
-    results.operators = operators;
-
-    return results;
+    return output;
 }
 
 QString MainWindow::removeSpaces(QString input)
 {
-    // Return given QString object without spaces.
-    QString inputNS;
+    /**
+     * Return given QString object without spaces. Opposite to addSpaces().
+     * @param input: A text that may contain spaces.
+     * @return output: Same as input, but no spaces.
+     */
+
+    QString output;
     for (int i = 0; i < input.size(); i++)
     {
         if (input[i] != " ")
         {
-            inputNS += input[i];
+            output += input[i];
         }
     }
-    return inputNS;
-}
-
-QList<double> MainWindow::findNumbers(QString input)
-{
-    // Returns list of numbers found in the input.
-    QRegExp separator("(\\+|\\-|\\*|\/)");
-    QStringList numbersAsStrings = input.split(separator);
-    QList<double> numbers;
-    for (int i = 0; i < numbersAsStrings.size(); i++){
-        numbers.append(numbersAsStrings[i].toDouble());
-    }
-
-    return numbers;
-}
-
-QStringList MainWindow::findOperators(QString input)
-{
-    // Return list of operators found in the input.
-    QStringList operators;
-    for (int i = 0; i<input.size(); i++){
-        if (input[i] == "+"){
-            operators.append("+");
-        } else if (input[i] == "-"){
-            operators.append("-");
-        } else if (input[i] == "*"){
-            operators.append("*");
-        } else if (input[i] == "/"){
-            operators.append("/");
-        }
-    }
-    return operators;
+    return output;
 }
 
 void MainWindow::on_clearButton_clicked()
 {
+    /**
+     * "Clear"-button was clicked.
+     */
+
     MainWindow::clearLayout(ui->memoryLayout);
 }
 
-void MainWindow::clearLayout(QLayout *layout){
+void MainWindow::clearLayout(QLayout *layout)
+{
+    /**
+     * Clear the memory layout and the Memory-object.
+     */
+
+    // Clear the memory layout.
     QLayoutItem *item;
     while((item = layout->takeAt(0))) {
         if (item->layout()) {
@@ -252,6 +184,57 @@ void MainWindow::clearLayout(QLayout *layout){
         delete item;
     }
 
+    // Clear also the memory-object.
+    memory.clearMemory();
 }
 
+void MainWindow::loadPrev()
+{
+    /**
+      * Get earlier calculation from the Memory-object and show it in the
+      * lineEdit.
+      */
+    QString previousCalc(memory.loadPrev(ui->calcLineEdit->text()));
+    ui->calcLineEdit->setText(previousCalc);
+    ui->calcLineEdit->setFocus();
+}
 
+void MainWindow::loadNext()
+{
+    /**
+      * Load next calculation from memory if there are any.
+      */
+    QString nextCalc(memory.loadNext(ui->calcLineEdit->text()));
+    ui->calcLineEdit->setText(nextCalc);
+    ui->calcLineEdit->setFocus();
+
+}
+
+void MainWindow::on_calcLineEdit_textEdited(const QString &arg1)
+{
+    /**
+      * If calcLineEdit is being edited, tell the memory that the user has
+      * stopped browsing the old calculations.
+      */
+    memory.deactivate();
+}
+
+void MainWindow::on_mLabel_click(MemoryLabel *mLabel)
+{
+    /**
+     * If some of the calculations in the memory layout is clicked, show it in
+     * the calcLineEdit.
+     * @input *mLabel: Label that is clicked.
+     */
+
+    QString calc = mLabel->text();
+
+    // Separate the calculation and the answer.
+    calc = calc.split("=")[0];
+    calc = MainWindow::removeSpaces(calc);
+
+
+    ui->calcLineEdit->setText(calc);
+    ui->calcLineEdit->setFocus();
+    memory.deactivate();
+}

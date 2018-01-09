@@ -9,5 +9,5 @@ Feel free to download the [installer](FastCalc_setup_1.3.exe) to test and use Fa
 
 ![FastCalc screenshot](FastCalc_screenshot.png)
 
-Type your calculation and press Enter or "=" button to calculate it. You can browse old calculations with up and down arrow keys or just clicking on them.
+Just type your calculation and press Enter or "=" button to calculate it. You can browse old calculations with up and down arrow keys or just clicking on them.
 

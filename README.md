@@ -1,7 +1,7 @@
 # FastCalc
 A fast and simple calculator for Windows.
 
-The program is made with Qt Creator. It uses [EXParser](https://code.google.com/archive/p/exparser/) library to parse the user input and show the answer.
+The program is made with Qt Creator. It uses [TinyExpr](https://github.com/codeplea/tinyexpr) library to parse the user input and show the answer.
 
 ## Manual
 

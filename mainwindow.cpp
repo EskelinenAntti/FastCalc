@@ -1,8 +1,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QtWidgets>
-#include "exparser.h"
 #include "memorylabel.h"
+#include "tinyexpr.h"
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -65,17 +66,27 @@ void MainWindow::calculate()
      * on the screen.
      */
 
+
     // Get user input from calcLineEdit.
     QString input = ui->calcLineEdit->text();
 
     // Remove spaces from the user input.
     input = MainWindow::removeSpaces(input);
 
+    // QString to constChar
+    std::string inputString = input.toStdString();
+    const char *inputChar = inputString.c_str();
+
+
+    // Testing new parser:
+    QString ans = QString::number(te_interp(inputChar,0));
+
+    /*
     // Parse and calculate the user input.
     EXParser mathParser;
     QString ans = QString::fromStdString(
                 mathParser.evaluate(input.toStdString()));
-
+    */
     // Put the calculation to the memory layout.
     addToMemoryLayout(input, ans);
 

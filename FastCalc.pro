@@ -26,15 +26,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    exparser.cpp \
-    memory.cpp \
-    memorylabel.cpp
+        memory.cpp \
+        memorylabel.cpp \
+        tinyexpr.c
+
 
 HEADERS += \
         mainwindow.h \
-    exparser.h \
     memory.h \
-    memorylabel.h
+    memorylabel.h \
+    tinyexpr.h
 
 FORMS += \
         mainwindow.ui

@@ -4,6 +4,7 @@
 #include "memory.h"
 #include <QMainWindow>
 #include "memorylabel.h"
+
 namespace Ui {
 class MainWindow;
 }

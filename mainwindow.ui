@@ -25,6 +25,7 @@
        <widget class="QLineEdit" name="calcLineEdit">
         <property name="font">
          <font>
+          <family>Consolas</family>
           <pointsize>12</pointsize>
          </font>
         </property>
@@ -76,7 +77,7 @@
          <x>0</x>
          <y>0</y>
          <width>230</width>
-         <height>181</height>
+         <height>196</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -146,7 +147,7 @@
      <x>0</x>
      <y>0</y>
      <width>254</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

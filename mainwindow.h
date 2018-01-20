@@ -4,6 +4,7 @@
 #include "memory.h"
 #include <QMainWindow>
 #include "memorylabel.h"
+#include <QtWidgets>
 
 namespace Ui {
 class MainWindow;
@@ -31,6 +32,7 @@ private slots:
 
     void on_calcLineEdit_textEdited(const QString &arg1);
 
+
 private:
 
     Ui::MainWindow *ui;
@@ -39,6 +41,7 @@ private:
     void setShortcuts();
     QString addSpaces(QString input);
     void addToMemoryLayout(QString input, QString ans);
+    void addCalcLayout(QString input, QString ans);
 };
 
 #endif // MAINWINDOW_H

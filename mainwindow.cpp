@@ -25,6 +25,7 @@ void MainWindow::setShortcuts(){
     /**
      * Set shortcuts for the program.
      */
+
     // Make a shortcut-object for both enter keys and connect them to the
     // "="-button.
     QShortcut *shortcut1 = new QShortcut(QKeySequence(Qt::Key_Enter), this);
@@ -57,12 +58,13 @@ void MainWindow::on_calcPushButton_clicked()
     if (ui->calcLineEdit->text() != ""){
         MainWindow::calculate();
     }
+
 }
 
 void MainWindow::calculate()
 {
     /**
-     * Try to calculate the input with an EXParser-object. Then show the result
+     * Try to calculate the input with TinuExpr. Then show the result
      * on the screen.
      */
 
@@ -73,20 +75,13 @@ void MainWindow::calculate()
     // Remove spaces from the user input.
     input = MainWindow::removeSpaces(input);
 
-    // QString to constChar
+    // QString to constChar.
     std::string inputString = input.toStdString();
     const char *inputChar = inputString.c_str();
 
+    // Parse the calculation and store the answer.
+    QString ans = QString::number(te_interp(inputChar, 0),'G',12 );
 
-    // Testing new parser:
-    QString ans = QString::number(te_interp(inputChar,0));
-
-    /*
-    // Parse and calculate the user input.
-    EXParser mathParser;
-    QString ans = QString::fromStdString(
-                mathParser.evaluate(input.toStdString()));
-    */
     // Put the calculation to the memory layout.
     addToMemoryLayout(input, ans);
 
@@ -102,31 +97,62 @@ void MainWindow::addToMemoryLayout(QString input, QString ans)
       * memory-object.
       */
 
-    QString calculation = input + QString("=") + ans;
-
     // Store the answer in memory-object.
     memory.addToMemory(input);
 
-    calculation = MainWindow::addSpaces(calculation);
-
-    // Add a new clickable "MemoryLabel" to the memory layout.
-    MemoryLabel *mLabel = new MemoryLabel();
-    mLabel->setText(calculation);
-    mLabel->setFont(QFont("Arial", 12));
-    connect(mLabel, SIGNAL(clicked(MemoryLabel*)), this,
-            SLOT(on_mLabel_click(MemoryLabel*)));
-
-    // Create a grey line after the label.
+    // Create a line after the widgets.
     QWidget *horizontalLine = new QWidget();
     horizontalLine -> setFixedHeight(2);
     horizontalLine -> setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     horizontalLine -> setStyleSheet(QString("background-color: #c0c0c0;"));
     ui->memoryLayout->insertWidget(0, horizontalLine);
-    ui->memoryLayout->insertWidget(0, mLabel);
+
+    MainWindow::addCalcLayout(input, ans);
 
 }
 
+void MainWindow::addCalcLayout(QString input, QString ans)
+{
+    /**
+      * Create a layout containg the calculation and the answer and add them
+      * to the memoryLabel.
+      */
 
+    // Create layout.
+    QHBoxLayout* calcLayout = new QHBoxLayout();
+
+    // Create widgets.
+    MemoryLabel* ansLabel = new MemoryLabel();
+    MemoryLabel *calcLabel = new MemoryLabel();
+    QLabel* equal = new QLabel();
+
+    // Set texts for the labels.
+    calcLabel->setText(input);
+    ansLabel->setText(ans);
+    equal->setText(" = ");
+
+    // Adjust fonts.
+    equal->setFont(QFont("Arial", 12));
+    calcLabel->setFont(QFont("Arial", 12));
+    ansLabel->setFont(QFont("Arial", 12));
+
+    // Connect signals and slots.
+    connect(ansLabel, SIGNAL(clicked(MemoryLabel*)), this,
+            SLOT(on_mLabel_click(MemoryLabel*)));
+    connect(calcLabel, SIGNAL(clicked(MemoryLabel*)), this,
+            SLOT(on_mLabel_click(MemoryLabel*)));
+
+    // Add labels to widget.
+    calcLayout->addWidget(calcLabel);
+    calcLayout->addWidget(equal);
+    calcLayout->addWidget(ansLabel);
+
+    calcLayout->addStretch();
+
+    ui->memoryLayout->insertLayout(0, calcLayout);
+
+
+}
 
 QString MainWindow::addSpaces(QString input){
     /**
@@ -179,20 +205,18 @@ void MainWindow::on_clearButton_clicked()
 void MainWindow::clearLayout(QLayout *layout)
 {
     /**
-     * Clear the memory layout and the Memory-object.
+     * Clear the memoryLayout and the Memory-object.
      */
 
-    // Clear the memory layout.
     QLayoutItem *item;
     while((item = layout->takeAt(0))) {
         if (item->layout()) {
             MainWindow::clearLayout(item->layout());
             delete item->layout();
         }
-        if (item->widget()) {
+        else if (item->widget()) {
             delete item->widget();
         }
-        delete item;
     }
 
     // Clear also the memory-object.
@@ -240,12 +264,8 @@ void MainWindow::on_mLabel_click(MemoryLabel *mLabel)
 
     QString calc = mLabel->text();
 
-    // Separate the calculation and the answer.
-    calc = calc.split("=")[0];
-    calc = MainWindow::removeSpaces(calc);
 
+    ui->calcLineEdit->insert(calc);
 
-    ui->calcLineEdit->setText(calc);
-    ui->calcLineEdit->setFocus();
     memory.deactivate();
 }

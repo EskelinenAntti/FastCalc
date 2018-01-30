@@ -42,6 +42,7 @@ private:
     QString addSpaces(QString input);
     void addToMemoryLayout(QString input, QString ans);
     void addCalcLayout(QString input, QString ans);
+    void commasToPoints(QString& input);
 };
 
 #endif // MAINWINDOW_H

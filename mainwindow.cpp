@@ -3,6 +3,7 @@
 #include <QtWidgets>
 #include "memorylabel.h"
 #include "tinyexpr.h"
+#include "focuseventfilter.h"
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -14,6 +15,9 @@ MainWindow::MainWindow(QWidget *parent) :
     MainWindow::setShortcuts();
     this->setMinimumSize(220, 220);
 
+    // Set a FocusEventFilter-object for calcLineEdit.
+    FocusEventFilter *focusEventFilter = new FocusEventFilter(this);
+    ui->calcLineEdit->installEventFilter(focusEventFilter);
 }
 
 MainWindow::~MainWindow()
@@ -75,6 +79,9 @@ void MainWindow::calculate()
     // Remove spaces from the user input.
     input = MainWindow::removeSpaces(input);
 
+    // Change commas to dots.
+    MainWindow::commasToPoints(input);
+
     // QString to constChar.
     std::string inputString = input.toStdString();
     const char *inputChar = inputString.c_str();
@@ -88,6 +95,15 @@ void MainWindow::calculate()
     // Show the result on the screen.
     ui->calcLineEdit->setText(ans);
     ui->calcLineEdit->selectAll();
+}
+
+void MainWindow::commasToPoints(QString &input)
+{
+    for (int i = 0; i<input.length(); i++){
+        if (input.at(i) == ','){
+            input.replace(i,1,'.');
+        }
+    }
 }
 
 void MainWindow::addToMemoryLayout(QString input, QString ans)
@@ -266,6 +282,6 @@ void MainWindow::on_mLabel_click(MemoryLabel *mLabel)
 
 
     ui->calcLineEdit->insert(calc);
-
+    ui->calcLineEdit->setFocus();
     memory.deactivate();
 }

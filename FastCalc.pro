@@ -28,14 +28,16 @@ SOURCES += \
         mainwindow.cpp \
         memory.cpp \
         memorylabel.cpp \
-        tinyexpr.c
+        tinyexpr.c \
+    focuseventfilter.cpp
 
 
 HEADERS += \
         mainwindow.h \
     memory.h \
     memorylabel.h \
-    tinyexpr.h
+    tinyexpr.h \
+    focuseventfilter.h
 
 FORMS += \
         mainwindow.ui

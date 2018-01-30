@@ -5,7 +5,7 @@ The program is made with Qt Creator. It uses [TinyExpr](https://github.com/codep
 
 ## Manual
 
-Feel free to download the [installer](FastCalc_setup_1.3.exe) to test and use FastCalc.
+Feel free to download the [installer](FastCalc_setup_1.4.exe) to test and use FastCalc.
 
 ![FastCalc screenshot](FastCalc_screenshot.png)
 
